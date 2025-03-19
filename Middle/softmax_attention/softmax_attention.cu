@@ -30,8 +30,16 @@ __global__ void attention_kernel(const float* Q, const float* K, const float* V,
         float* temp_row = new float[N];
 
         // Compute QK^T
+        /*
+            Q: only 1 row, one query (1xd)
+            K: all rows
+        */
         for (int i = 0; i < N; ++i) {
             temp_row[i] = 0.0f;
+            /*
+                Q: q1 (1xd) with the specific "row"
+                K: k1 (1xd) with the specific column = i
+            */
             for (int j = 0; j < d; ++j) {
                 temp_row[i] += Q[row * d + j] * K[i * d + j];
             }
@@ -42,6 +50,10 @@ __global__ void attention_kernel(const float* Q, const float* K, const float* V,
         row_wise_softmax(temp_row, N);
 
         // Compute weighted sum with V
+        /*
+            row wise softmax(QK^T): 1xN
+            V: only one specific column (col): Nx1
+        */
         float final_val = 0.0;
         for(int i = 0; i < N; i++){
           final_val += temp_row[i] * V[i*d + col];
